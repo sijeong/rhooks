@@ -7,26 +7,13 @@ import CreatePost from './post/CreatePost'
 import PostList from './post/PostList'
 import appReducer from './reducers'
 import UserBar from './user/UserBar'
-import {Button} from 'react-bulma-components'
-// import 'react-bulma-components/dist/react-bulma-components.min.css'
-// import Button from 'react-bulma-components/src/components/button'
-// const user = 'cfxp'
-const defaultPosts = [
-  { title: 'React Hooks', content: 'The greated thing since sliced bread!', author: 'cfxp' },
-  { title: 'Using React Fragments', content: 'Keeping the DOM tree clean!', author: 'cfxp' }
-]
-
-// export const ThemeContext = React.createContext({
-//   primaryColor: 'deepskyblue'
-// })
+import { useResource } from 'react-request-hook'
+import { Button } from 'react-bulma-components'
 
 export default function App() {
-  // const [user, setUser] = useState('')
-  // const [posts, setPosts] = useState(defaultPosts)
-  // const [user, dispatchUser] = useReducer(userReducer, '')
-  // const [posts, dispatchPosts] = useReducer(postsReducer, defaultPosts)
-  const [state, dispatch] = useReducer(appReducer, { user: '', posts: defaultPosts })
-  const { user } = state
+
+  const [state, dispatch] = useReducer(appReducer, { user: '', posts: [], error: '' })
+  const { user, error } = state
   const [theme, setTheme] = useState({
     primaryColor: 'deepskyblue',
     secondaryColor: 'coral'
@@ -39,6 +26,21 @@ export default function App() {
     }
   }, [user])
 
+  const [posts, getPosts] = useResource(() => ({
+    url: '/posts',
+    method: 'get'
+  }))
+
+  useEffect(getPosts, [])
+
+  useEffect(() => {
+    if (posts && posts.error) {
+      dispatch({ type: 'POSTS_ERROR' })
+    }
+    if (posts && posts.data) {
+      dispatch({ type: 'FETCH_POSTS', posts: posts.data.reverse() })
+    }
+  }, [posts])
   return (
     <StateContext.Provider value={{ state, dispatch }}>
       <ThemeContext.Provider value={theme}>
@@ -53,6 +55,7 @@ export default function App() {
           {user && <CreatePost />}
           <br />
           <hr />
+          {error && <b>{error}</b>}
           <PostList />
           <button className="is-primary button">PPP</button>
           <Button color="primary" size="large">BPP</Button>

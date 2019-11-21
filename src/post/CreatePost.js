@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react'
 import {StateContext} from '../contexts'
+import { useResource } from 'react-request-hook'
 
 export default function CreatePost() {
     const [title, setTitle] = useState('')
@@ -11,10 +12,16 @@ export default function CreatePost() {
         setContent(evt.target.value)
     }
     function handleCreate() {
+        createPost({title, content, author: user})
         dispatch({ type: 'CREATE_POST', title, content, author: user })
     }
     const {state, dispatch} = useContext(StateContext)
     const {user} = state 
+    const [, createPost] = useResource(({title, content, author }) => ({
+        url: '/posts',
+        method: 'post',
+        data: {title, content, author}
+    }))
     return (
         <form onSubmit={e => { e.preventDefault(); handleCreate() }}>
             <div>Author: <b>{user}</b></div>
